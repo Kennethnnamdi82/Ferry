@@ -1,0 +1,9 @@
+{
+  "name": "root",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --cwd ferry dev -- --host 0.0.0.0",
+    "build": "bun install --cwd ferry && bun run --cwd ferry build && rm -rf dist && cp -r ferry/dist dist",
+    "install:all": "bun install --cwd ferry"
+  }
+}

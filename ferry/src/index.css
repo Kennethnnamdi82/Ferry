@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ferry — Modern SaaS clean
+   Light by default, near-black ink, single bold blue accent.
+   A dark variant ships under .dark for parity. */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 32% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 32% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 32% 8%;
+
+    --primary: 222 47% 11%;            /* near-black ink for primary CTAs */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 32% 14%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 221 83% 53%;             /* electric blue */
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 221 83% 96%;
+
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
+
+    --radius: 0.625rem;
+
+    --grid-color: 220 13% 94%;
+    --shadow-sm: 0 1px 2px 0 hsl(222 32% 8% / 0.05);
+    --shadow-md: 0 4px 16px -4px hsl(222 32% 8% / 0.06), 0 2px 4px -2px hsl(222 32% 8% / 0.04);
+    --shadow-lg: 0 24px 48px -16px hsl(222 32% 8% / 0.12), 0 8px 16px -8px hsl(222 32% 8% / 0.08);
+    --shadow-glow: 0 0 0 4px hsl(221 83% 53% / 0.10);
+
+    --sidebar-background: 220 14% 98%;
+    --sidebar-foreground: 222 16% 30%;
+    --sidebar-primary: 222 47% 11%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 94%;
+    --sidebar-accent-foreground: 222 32% 12%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 221 83% 53%;
+  }
+
+  .dark {
+    --background: 222 32% 6%;
+    --foreground: 210 20% 96%;
+    --card: 222 28% 9%;
+    --card-foreground: 210 20% 96%;
+    --popover: 222 28% 9%;
+    --popover-foreground: 210 20% 96%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 20% 14%;
+    --secondary-foreground: 210 20% 92%;
+    --muted: 222 20% 14%;
+    --muted-foreground: 218 12% 65%;
+    --accent: 221 83% 60%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 221 60% 16%;
+    --border: 222 20% 18%;
+    --input: 222 20% 18%;
+    --ring: 221 83% 60%;
+    --grid-color: 222 20% 14%;
+    --sidebar-background: 222 28% 7%;
+    --sidebar-foreground: 218 12% 70%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 222 20% 12%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 222 20% 14%;
+    --sidebar-ring: 221 83% 60%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html, body, #root { @apply h-full; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { letter-spacing: -0.02em; }
+  .font-display { font-family: 'Inter', sans-serif; letter-spacing: -0.035em; }
+  .font-mono, code, kbd, pre, samp {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+}
+
+@layer components {
+  .surface {
+    @apply rounded-xl border bg-card;
+    box-shadow: var(--shadow-sm);
+  }
+  .surface-lift {
+    @apply rounded-xl border bg-card transition-all;
+    box-shadow: var(--shadow-sm);
+  }
+  .surface-lift:hover {
+    box-shadow: var(--shadow-md);
+    @apply -translate-y-0.5;
+  }
+
+  .stat-num {
+    font-variant-numeric: tabular-nums;
+    @apply tracking-tight;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(hsl(var(--grid-color)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid-color)) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .bg-grid-fade {
+    mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 75%);
+  }
+
+  .dot-live {
+    @apply relative inline-flex h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))];
+  }
+  .dot-live::after {
+    content: "";
+    @apply absolute inset-0 rounded-full bg-[hsl(var(--success))];
+    animation: ferry-pulse 2s ease-out infinite;
+  }
+  @keyframes ferry-pulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    80%, 100% { transform: scale(3); opacity: 0; }
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
