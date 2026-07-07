@@ -1,6 +1,7 @@
 import "dotenv/config";
 import "express-async-errors";
 import express from "express";
+import http from "node:http";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -52,6 +53,29 @@ app.use("/api/activity", activityRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
+
+function startKeepAlive(port) {
+  setInterval(() => {
+    const req = http.get(
+      {
+        hostname: "127.0.0.1",
+        port,
+        path: "/api/health",
+        timeout: 10_000,
+      },
+      (res) => {
+        res.resume();
+      },
+    );
+
+    req.on("error", () => {});
+    req.on("timeout", () => req.destroy());
+  }, 60_000);
+}
+
 connectDB().then(() => {
-  app.listen(PORT, () => console.log(`API running on :${PORT}`));
+  app.listen(PORT, () => {
+    console.log(`API running on :${PORT}`);
+    startKeepAlive(PORT);
+  });
 });
