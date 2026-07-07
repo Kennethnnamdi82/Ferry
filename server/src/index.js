@@ -4,9 +4,11 @@ import express from "express";
 import http from "node:http";
 import cors from "cors";
 import helmet from "helmet";
+import mongoose from "mongoose";
 import rateLimit from "express-rate-limit";
 
 import connectDB from "./config/db.js";
+import { validateStartupEnv } from "./config/env.js";
 import errorHandler from "./middleware/error.js";
 
 import authRoutes from "./routes/auth.js";
@@ -40,7 +42,12 @@ app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 app.use("/api/auth/refresh", authLimiter);
 
-app.get("/api/health", (_req, res) => res.json({ ok: true }));
+function dbStatus() {
+  return mongoose.connection.readyState === 1 ? "connected" : "connecting";
+}
+
+app.get("/", (_req, res) => res.json({ ok: true, service: "ferry-api", db: dbStatus() }));
+app.get("/api/health", (_req, res) => res.json({ ok: true, db: dbStatus() }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/documents", documentRoutes);
@@ -73,9 +80,27 @@ function startKeepAlive(port) {
   }, 60_000);
 }
 
-connectDB().then(() => {
+async function connectDBWithRetry() {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error("[startup] MongoDB connection failed.");
+    console.error(err instanceof Error ? err.message : err);
+    console.error("[startup] Retrying MongoDB connection in 10 seconds.");
+    setTimeout(connectDBWithRetry, 10_000);
+  }
+}
+
+try {
+  validateStartupEnv();
+
   app.listen(PORT, () => {
     console.log(`API running on :${PORT}`);
     startKeepAlive(PORT);
+    connectDBWithRetry();
   });
-});
+} catch (err) {
+  console.error("[startup] Backend failed to start.");
+  console.error(err instanceof Error ? err.message : err);
+  process.exit(1);
+}
