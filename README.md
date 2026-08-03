@@ -153,6 +153,27 @@ Preview the production build:
 npm run preview
 ```
 
+### SPA refresh fallback
+
+Ferry uses React Router, so the frontend host must rewrite deep links back to
+`index.html`. Without this, refreshing `/dashboard`, `/admin/users`, or any
+other client route can show a Not Found page.
+
+For Render Static Sites, add this Redirect/Rewrite rule:
+
+```txt
+Source Path: /*
+Destination Path: /index.html
+Action: Rewrite
+```
+
+The repo also includes deployment configs for common static hosts:
+
+- `vercel.json`
+- `netlify.toml`
+- `render.yaml`
+- `ferry/public/_redirects`
+
 ---
 
 ## 🧪 Useful Commands
