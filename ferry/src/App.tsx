@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -30,40 +31,42 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin/login" element={<Login adminLogin />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/s/:token" element={<SharedFile />} />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin/login" element={<Login adminLogin />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/s/:token" element={<SharedFile />} />
 
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
-            <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetails /></ProtectedRoute>} />
-            <Route path="/vaults" element={<ProtectedRoute><VaultsList /></ProtectedRoute>} />
-            <Route path="/vaults/:id" element={<ProtectedRoute><VaultDetails /></ProtectedRoute>} />
-            <Route path="/shared" element={<ProtectedRoute><Shared /></ProtectedRoute>} />
-            <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
-            <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
+              <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetails /></ProtectedRoute>} />
+              <Route path="/vaults" element={<ProtectedRoute><VaultsList /></ProtectedRoute>} />
+              <Route path="/vaults/:id" element={<ProtectedRoute><VaultDetails /></ProtectedRoute>} />
+              <Route path="/shared" element={<ProtectedRoute><Shared /></ProtectedRoute>} />
+              <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
+              <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
 
-            <Route path="/admin" element={<ProtectedRoute adminOnly><AdminOverview /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
-            <Route path="/admin/vaults" element={<ProtectedRoute adminOnly><AdminVaults /></ProtectedRoute>} />
-            <Route path="/admin/documents" element={<ProtectedRoute adminOnly><AdminDocuments /></ProtectedRoute>} />
-            <Route path="/admin/shares" element={<ProtectedRoute adminOnly><AdminShares /></ProtectedRoute>} />
-            <Route path="/admin/logs" element={<ProtectedRoute adminOnly><AdminLogs /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute adminOnly><AdminOverview /></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
+              <Route path="/admin/vaults" element={<ProtectedRoute adminOnly><AdminVaults /></ProtectedRoute>} />
+              <Route path="/admin/documents" element={<ProtectedRoute adminOnly><AdminDocuments /></ProtectedRoute>} />
+              <Route path="/admin/shares" element={<ProtectedRoute adminOnly><AdminShares /></ProtectedRoute>} />
+              <Route path="/admin/logs" element={<ProtectedRoute adminOnly><AdminLogs /></ProtectedRoute>} />
 
-            <Route path="/index" element={<Navigate to="/" replace />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+              <Route path="/index" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

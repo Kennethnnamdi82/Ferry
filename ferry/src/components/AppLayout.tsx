@@ -2,6 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   LogOut, FolderOpen, Upload, Users, FileText, ScrollText,
   Activity, Menu, X, Trash2, Share2, LayoutDashboard,
@@ -79,7 +80,7 @@ export function AppLayout({ children, mode = "user" }: { children: React.ReactNo
           <span className="dot-live" />
           <span>All systems normal</span>
         </div>
-        <div className="mb-2 flex items-center gap-2.5 rounded-lg bg-sidebar-accent/60 px-2.5 py-2">
+        <div className="mb-2 flex items-center gap-2.5 rounded-lg bg-sidebar-accent/70 px-2.5 py-2 ring-1 ring-sidebar-border/70">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground text-[12px] font-semibold text-background">
             {user?.name?.charAt(0).toUpperCase() ?? "U"}
           </div>
@@ -87,6 +88,7 @@ export function AppLayout({ children, mode = "user" }: { children: React.ReactNo
             <div className="truncate text-[13px] font-medium text-foreground">{user?.name}</div>
             <div className="truncate text-[11px] text-muted-foreground">{user?.email}</div>
           </div>
+          <ThemeToggle className="h-8 w-8 shrink-0" />
         </div>
         <Button
           variant="ghost"
@@ -128,7 +130,7 @@ export function AppLayout({ children, mode = "user" }: { children: React.ReactNo
         </div>
       )}
 
-      <main className="flex-1 overflow-x-hidden">
+      <main className="flex-1 overflow-x-hidden bg-[radial-gradient(circle_at_top_right,hsl(var(--accent)_/_0.08),transparent_34rem)]">
         {/* Mobile header */}
         <header className="flex items-center justify-between border-b bg-background/80 px-4 py-3 backdrop-blur md:hidden">
           <button
@@ -139,7 +141,7 @@ export function AppLayout({ children, mode = "user" }: { children: React.ReactNo
             <Menu className="h-5 w-5" />
           </button>
           <FerryLogo size={22} />
-          <div className="w-9" />
+          <ThemeToggle />
         </header>
         <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-10 animate-fade-in">{children}</div>
       </main>

@@ -8,6 +8,7 @@ import { Loader2, ArrowRight, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { FerryLogo } from "@/components/FerryLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -47,9 +48,12 @@ export default function Register() {
     <div className="grid min-h-screen md:grid-cols-2">
       {/* Left: form */}
       <div className="relative flex flex-col px-6 py-8 md:px-12">
-        <Link to="/" className="inline-flex w-fit">
-          <FerryLogo size={30} withWordmark />
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link to="/" className="inline-flex w-fit">
+            <FerryLogo size={30} withWordmark />
+          </Link>
+          <ThemeToggle />
+        </div>
 
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           <h1 className="font-display text-3xl font-semibold tracking-tight">Create your account</h1>
@@ -128,16 +132,16 @@ export default function Register() {
       </div>
 
       {/* Right: visual */}
-      <div className="relative hidden overflow-hidden bg-foreground md:block">
+      <div className="relative hidden overflow-hidden bg-primary md:block">
         <div className="absolute inset-0 bg-grid opacity-[0.06]" />
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-accent/30" />
-        <div className="relative flex h-full flex-col justify-between p-12 text-background">
+        <div className="relative flex h-full flex-col justify-between p-12 text-primary-foreground">
           <FerryLogo size={32} />
           <div>
             <h2 className="font-display text-3xl font-semibold tracking-tight">
               A calmer home for your important files.
             </h2>
-            <ul className="mt-7 space-y-3 text-[15px] text-background/85">
+            <ul className="mt-7 space-y-3 text-[15px] text-primary-foreground/85">
               {[
                 "Encrypted at rest, every file",
                 "Drag-and-drop uploads with tags",

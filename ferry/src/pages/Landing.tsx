@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Lock, Zap, Users, FileText, ShieldCheck, CheckCircle2, Star } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { FerryLogo } from "@/components/FerryLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export default function Landing() {
             <a href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Pricing</a>
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {user ? (
               <Button asChild size="sm">
                 <Link to="/dashboard">Open app <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
@@ -39,7 +41,7 @@ export default function Landing() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-grid bg-grid-fade opacity-60" />
-        <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-accent/10 blur-[140px]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-accent/10 to-transparent" />
         <div className="relative mx-auto max-w-5xl px-6 pb-24 pt-20 text-center md:pt-28">
           <Link
             to="/register"
@@ -91,7 +93,7 @@ export default function Landing() {
                 <div className="border-r p-3 text-xs">
                   <div className="mb-2 flex items-center gap-2"><FerryLogo size={20} /><span className="font-medium">Ferry</span></div>
                   <div className="mt-3 space-y-0.5">
-                    <div className="rounded-md bg-foreground px-2.5 py-1.5 text-background">Documents</div>
+                    <div className="rounded-md bg-primary px-2.5 py-1.5 text-primary-foreground">Documents</div>
                     <div className="px-2.5 py-1.5 text-muted-foreground">Upload</div>
                     <div className="px-2.5 py-1.5 text-muted-foreground">Shared</div>
                     <div className="px-2.5 py-1.5 text-muted-foreground">Trash</div>
@@ -153,7 +155,7 @@ export default function Landing() {
             { icon: Users, title: "Team-ready controls", body: "Roles, permissions, and a full activity log out of the box. Own your data." },
           ].map((f) => (
             <div key={f.title} className="surface-lift p-6">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-foreground text-background">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <f.icon className="h-5 w-5" />
               </div>
               <h3 className="mt-5 text-lg font-semibold tracking-tight">{f.title}</h3>

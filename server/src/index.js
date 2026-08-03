@@ -1,7 +1,10 @@
 import "dotenv/config";
 import "express-async-errors";
 import express from "express";
+import { existsSync } from "node:fs";
 import http from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import cors from "cors";
 import helmet from "helmet";
 import mongoose from "mongoose";
@@ -20,6 +23,13 @@ import adminRoutes from "./routes/admin.js";
 import activityRoutes from "./routes/activity.js";
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = [
+  path.resolve(__dirname, "../../dist"),
+  path.resolve(__dirname, "../../ferry/dist"),
+].find((distPath) => existsSync(path.join(distPath, "index.html")));
+const clientIndexPath = clientDistPath ? path.join(clientDistPath, "index.html") : null;
 
 app.use(helmet());
 app.use(express.json({ limit: "2mb" }));
@@ -46,7 +56,13 @@ function dbStatus() {
   return mongoose.connection.readyState === 1 ? "connected" : "connecting";
 }
 
-app.get("/", (_req, res) => res.json({ ok: true, service: "ferry-api", db: dbStatus() }));
+app.get("/", (req, res, next) => {
+  if (clientIndexPath && req.accepts("html")) {
+    return next();
+  }
+
+  return res.json({ ok: true, service: "ferry-api", db: dbStatus() });
+});
 app.get("/api/health", (_req, res) => res.json({ ok: true, db: dbStatus() }));
 
 app.use("/api/auth", authRoutes);
@@ -56,6 +72,17 @@ app.use("/api/shares", shareRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/activity", activityRoutes);
+
+if (clientDistPath) {
+  app.use(express.static(clientDistPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || !req.accepts("html")) {
+      return next();
+    }
+
+    return res.sendFile(clientIndexPath);
+  });
+}
 
 app.use(errorHandler);
 

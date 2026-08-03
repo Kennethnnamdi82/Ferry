@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { FerryLogo } from "@/components/FerryLogo";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,6 +13,9 @@ const NotFound = () => {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-6">
+      <div className="absolute right-5 top-5 z-20">
+        <ThemeToggle />
+      </div>
       <div className="pointer-events-none absolute inset-0 bg-grid bg-grid-fade opacity-60" />
       <div className="relative z-10 text-center">
         <div className="mx-auto mb-6 flex justify-center">

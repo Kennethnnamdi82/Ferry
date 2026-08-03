@@ -10,6 +10,7 @@ import { formatBytes, formatDate } from "@/lib/format";
 import { fileIcon } from "@/lib/fileIcon";
 import { DocumentPreview } from "@/components/DocumentPreview";
 import { downloadBlob } from "@/lib/download";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface SharedFileMeta {
   document: {
@@ -111,9 +112,12 @@ export default function SharedFile() {
       <header className="border-b">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <FerryLogo size={26} />
-          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-[hsl(var(--success))]" /> Secure shared link
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-[hsl(var(--success))]" /> Secure shared link
+            </span>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

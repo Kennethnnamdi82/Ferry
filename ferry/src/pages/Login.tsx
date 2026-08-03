@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { FerryLogo } from "@/components/FerryLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Login({ adminLogin = false }: { adminLogin?: boolean }) {
   const { login } = useAuth();
@@ -43,9 +44,12 @@ export default function Login({ adminLogin = false }: { adminLogin?: boolean }) 
     <div className="grid min-h-screen md:grid-cols-2">
       {/* Left: form */}
       <div className="relative flex flex-col px-6 py-8 md:px-12">
-        <Link to="/" className="inline-flex w-fit">
-          <FerryLogo size={30} withWordmark />
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link to="/" className="inline-flex w-fit">
+            <FerryLogo size={30} withWordmark />
+          </Link>
+          <ThemeToggle />
+        </div>
 
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -114,17 +118,17 @@ export default function Login({ adminLogin = false }: { adminLogin?: boolean }) 
       </div>
 
       {/* Right: visual */}
-      <div className="relative hidden overflow-hidden bg-foreground md:block">
+      <div className="relative hidden overflow-hidden bg-primary md:block">
         <div className="absolute inset-0 bg-grid opacity-[0.06]" />
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-accent/30" />
-        <div className="relative flex h-full flex-col justify-between p-12 text-background">
+        <div className="relative flex h-full flex-col justify-between p-12 text-primary-foreground">
           <FerryLogo size={32} />
           <blockquote>
             <p className="font-display text-2xl font-medium leading-snug tracking-tight">
               "Ferry feels like the document tool we always wished we had —
               fast, calm, and out of the way."
             </p>
-            <footer className="mt-5 text-sm text-background/70">
+            <footer className="mt-5 text-sm text-primary-foreground/70">
               Maya Chen · Head of Operations, Northwind
             </footer>
           </blockquote>
