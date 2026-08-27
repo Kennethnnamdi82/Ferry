@@ -1,9 +1,9 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
-export const generateToken = () => {
+export function generateToken() {
   return crypto.randomBytes(32).toString("hex");
-};
+}
 
-export const hashToken = (token) => {
+export function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
-};
+}
