@@ -13,7 +13,14 @@ export function getEnv(name) {
 }
 
 export function validateStartupEnv() {
-  const required = ["MONGO_URI", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET"];
+  const required = [
+    "MONGO_URI",
+    "JWT_ACCESS_SECRET",
+    "JWT_REFRESH_SECRET",
+    "RESEND_API_KEY",
+    "EMAIL_FROM",
+    "APP_URL",
+  ];
   const missing = required.filter((name) => !getEnv(name));
 
   if (missing.length > 0) {

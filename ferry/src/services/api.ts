@@ -1,8 +1,11 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const configuredBaseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const configuredBaseURL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 const trimmedBaseURL = configuredBaseURL.replace(/\/+$/, "");
-const baseURL = trimmedBaseURL.endsWith("/api") ? trimmedBaseURL : `${trimmedBaseURL}/api`;
+const baseURL = trimmedBaseURL.endsWith("/api")
+  ? trimmedBaseURL
+  : `${trimmedBaseURL}/api`;
 
 export const api = axios.create({
   baseURL,
@@ -53,7 +56,9 @@ async function refreshAccessToken(): Promise<string | null> {
   const refresh = tokenStore.refresh;
   if (!refresh) return null;
   try {
-    const { data } = await axios.post(`${baseURL}/auth/refresh`, { refreshToken: refresh });
+    const { data } = await axios.post(`${baseURL}/auth/refresh`, {
+      refreshToken: refresh,
+    });
     tokenStore.setTokens(data.accessToken, data.refreshToken || refresh);
     return data.accessToken;
   } catch {
@@ -139,12 +144,15 @@ api.interceptors.response.use(
       }
       // Refresh failed → hard logout and bounce to /login.
       tokenStore.clear();
-      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.startsWith("/login")
+      ) {
         window.location.assign("/login");
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 // ===== Types =====
@@ -164,6 +172,7 @@ export interface User {
   email: string;
   role: "user" | "admin";
   status: "active" | "suspended";
+  emailVerified: boolean;
   storageUsed: number;
   createdAt: string;
 }
@@ -278,13 +287,23 @@ export interface AdminLog {
 // ===== Auth =====
 export const authApi = {
   register: (payload: { name: string; email: string; password: string }) =>
-    api.post<{ user: User; accessToken: string; refreshToken: string }>("/auth/register", payload),
-  login: (payload: { email: string; password: string }) =>
-    api.post<{ user: User; accessToken: string; refreshToken: string }>("/auth/login", payload),
-  me: () => api.get<{ user: User }>("/auth/me"),
-  logout: () => api.post("/auth/logout"),
-};
+    api.post<{ user: User; message: string }>("/auth/register", payload),
 
+  login: (payload: { email: string; password: string }) =>
+    api.post<{ user: User; accessToken: string; refreshToken: string }>(
+      "/auth/login",
+      payload,
+    ),
+
+  me: () => api.get<{ user: User }>("/auth/me"),
+
+  logout: () => api.post("/auth/logout"),
+
+  verifyEmail: (token: string) =>
+    api.get<{ message: string }>("/auth/verify-email", {
+      params: { token },
+    }),
+};
 // ===== Vaults =====
 export const vaultsApi = {
   list: () => api.get<{ vaults: Vault[] }>("/vaults"),
@@ -296,11 +315,21 @@ export const vaultsApi = {
     color?: string;
     allowViewerDownload?: boolean;
   }) => api.post<{ vault: Vault }>("/vaults", payload),
-  update: (id: string, payload: Partial<{ name: string; description: string; allowViewerDownload: boolean; icon: string; color: string }>) =>
-    api.put<{ vault: Vault }>(`/vaults/${id}`, payload),
+  update: (
+    id: string,
+    payload: Partial<{
+      name: string;
+      description: string;
+      allowViewerDownload: boolean;
+      icon: string;
+      color: string;
+    }>,
+  ) => api.put<{ vault: Vault }>(`/vaults/${id}`, payload),
   remove: (id: string) => api.delete(`/vaults/${id}`),
   members: (id: string) =>
-    api.get<{ owner: UserRef & { role: "editor" }; members: VaultMember[] }>(`/vaults/${id}/members`),
+    api.get<{ owner: UserRef & { role: "editor" }; members: VaultMember[] }>(
+      `/vaults/${id}/members`,
+    ),
   invite: (id: string, email: string) =>
     api.post<{ member: VaultMember }>(`/vaults/${id}/members`, { email }),
   removeMember: (id: string, memberId: string) =>
@@ -325,8 +354,14 @@ export interface DocumentListParams {
 
 export const documentsApi = {
   list: (params: DocumentListParams = {}) =>
-    api.get<{ documents: DocumentItem[]; pagination: Pagination }>("/documents", { params }),
-  get: (id: string) => api.get<{ document: DocumentItem; role: "editor" | "viewer" }>(`/documents/${id}`),
+    api.get<{ documents: DocumentItem[]; pagination: Pagination }>(
+      "/documents",
+      { params },
+    ),
+  get: (id: string) =>
+    api.get<{ document: DocumentItem; role: "editor" | "viewer" }>(
+      `/documents/${id}`,
+    ),
   create: (formData: FormData, onUploadProgress?: (e: ProgressEvent) => void) =>
     api.post<{ document: DocumentItem }>("/documents", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -335,14 +370,20 @@ export const documentsApi = {
     }),
   update: (
     id: string,
-    payload: Partial<Pick<DocumentItem, "name" | "description" | "tags" | "category">>,
+    payload: Partial<
+      Pick<DocumentItem, "name" | "description" | "tags" | "category">
+    >,
   ) => api.put<{ document: DocumentItem }>(`/documents/${id}`, payload),
   remove: (id: string) => api.delete(`/documents/${id}`),
-  restore: (id: string) => api.post<{ document: DocumentItem }>(`/documents/${id}/restore`),
+  restore: (id: string) =>
+    api.post<{ document: DocumentItem }>(`/documents/${id}/restore`),
   purge: (id: string) => api.delete(`/documents/${id}/purge`),
-  download: (id: string) => api.get<{ url: string; expiresAt: number }>(`/documents/${id}/download`),
+  download: (id: string) =>
+    api.get<{ url: string; expiresAt: number }>(`/documents/${id}/download`),
   preview: (id: string) =>
-    api.get<{ url: string; expiresAt: number; mimeType: string }>(`/documents/${id}/preview`),
+    api.get<{ url: string; expiresAt: number; mimeType: string }>(
+      `/documents/${id}/preview`,
+    ),
 };
 
 // ===== Shares =====
@@ -361,17 +402,29 @@ export const sharesApi = {
   // Public — no auth required, but the interceptor will still try to attach a token; that's harmless.
   publicGet: (token: string) =>
     axios.get<{
-      document: { _id: string; name: string; mimeType: string; size: number; createdAt: string };
+      document: {
+        _id: string;
+        name: string;
+        mimeType: string;
+        size: number;
+        createdAt: string;
+      };
       allowDownload: boolean;
       expiresAt: string | null;
       requiresPassword: boolean;
     }>(`${baseURL}/shares/${token}`),
-  publicFile: (token: string, opts: { download?: boolean; password?: string } = {}) =>
+  publicFile: (
+    token: string,
+    opts: { download?: boolean; password?: string } = {},
+  ) =>
     axios.post<{ url: string; expiresAt: number }>(
       `${baseURL}/shares/${token}/file${opts.download ? "?download=1" : ""}`,
-      { password: opts.password ?? undefined }
+      { password: opts.password ?? undefined },
     ),
-  publicContent: (token: string, opts: { download?: boolean; password?: string } = {}) =>
+  publicContent: (
+    token: string,
+    opts: { download?: boolean; password?: string } = {},
+  ) =>
     axios.post(
       `${baseURL}/shares/${token}/content${opts.download ? "?download=1" : ""}`,
       { password: opts.password ?? undefined },
@@ -382,9 +435,17 @@ export const sharesApi = {
 // ===== Export (ZIP / PDF) =====
 export const exportApi = {
   zip: (documentIds: string[]) =>
-    api.post(`/export/zip`, { documentIds }, { responseType: "blob", timeout: 120000 }),
+    api.post(
+      `/export/zip`,
+      { documentIds },
+      { responseType: "blob", timeout: 120000 },
+    ),
   pdf: (documentIds: string[], name?: string) =>
-    api.post(`/export/pdf`, { documentIds, name }, { responseType: "blob", timeout: 120000 }),
+    api.post(
+      `/export/pdf`,
+      { documentIds, name },
+      { responseType: "blob", timeout: 120000 },
+    ),
 };
 
 // ===== Admin =====
@@ -427,7 +488,9 @@ export interface ActivityItem {
 }
 export const activityApi = {
   list: (params: { page?: number; limit?: number } = {}) =>
-    api.get<{ logs: ActivityItem[]; pagination: Pagination }>("/activity", { params }),
+    api.get<{ logs: ActivityItem[]; pagination: Pagination }>("/activity", {
+      params,
+    }),
 };
 
 export function getApiErrorMessage(err: unknown): string {
