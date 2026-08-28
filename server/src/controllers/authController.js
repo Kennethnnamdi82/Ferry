@@ -4,7 +4,10 @@ import User from "../models/User.js";
 import ActivityLog from "../models/ActivityLog.js";
 import Vault from "../models/Vault.js";
 import { generateToken, hashToken } from "../utils/authTokens.js";
-import { sendVerificationEmail } from "../services/email/email.service.js";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "../services/email/email.service.js";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -16,6 +19,20 @@ const loginSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(1),
 });
+
+const emailSchema = z.object({
+  email: z.string().trim().email().max(255),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8).max(128),
+});
+
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+const PASSWORD_RESET_RESPONSE =
+  "If an account exists for that email, a password reset link has been sent.";
 
 function signTokens(user) {
   const accessToken = jwt.sign(
@@ -44,10 +61,24 @@ function publicUser(u) {
   };
 }
 
+function appUrl(path) {
+  return `${process.env.APP_URL.replace(/\/+$/, "")}${path}`;
+}
+
+function issueEmailVerification(user) {
+  const token = generateToken();
+  user.emailVerificationToken = hashToken(token);
+  user.emailVerificationExpires = new Date(
+    Date.now() + VERIFICATION_TOKEN_TTL_MS,
+  );
+  return token;
+}
+
 export const register = async (req, res) => {
   const data = registerSchema.parse(req.body);
+  const email = data.email.toLowerCase();
 
-  const exists = await User.findOne({ email: data.email });
+  const exists = await User.findOne({ email });
 
   if (exists) {
     return res.status(409).json({
@@ -55,19 +86,14 @@ export const register = async (req, res) => {
     });
   }
 
-  // Generate email verification token
-  const verificationToken = generateToken();
-  const hashedVerificationToken = hashToken(verificationToken);
-
-  const verificationExpires = new Date(Date.now() + 30 * 60 * 1000);
-
   // Create user
   const user = await User.create({
     ...data,
+    email,
     emailVerified: false,
-    emailVerificationToken: hashedVerificationToken,
-    emailVerificationExpires: verificationExpires,
   });
+  const verificationToken = issueEmailVerification(user);
+  await user.save({ validateBeforeSave: false });
 
   // Create user's default vault
   await Vault.create({
@@ -79,7 +105,7 @@ export const register = async (req, res) => {
   });
 
   // Build verification URL
-  const verificationUrl = `${process.env.APP_URL}/verify-email?token=${verificationToken}`;
+  const verificationUrl = appUrl(`/verify-email?token=${verificationToken}`);
 
   // Send verification email
   await sendVerificationEmail({
@@ -103,7 +129,9 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   const data = loginSchema.parse(req.body);
-  const user = await User.findOne({ email: data.email }).select("+password");
+  const user = await User.findOne({ email: data.email.toLowerCase() }).select(
+    "+password",
+  );
   if (!user || !(await user.comparePassword(data.password))) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
@@ -188,4 +216,90 @@ export const verifyEmail = async (req, res) => {
   res.json({
     message: "Email verified successfully",
   });
+};
+
+export const resendVerification = async (req, res) => {
+  const data = emailSchema.parse(req.body);
+  const user = await User.findOne({ email: data.email.toLowerCase() }).select(
+    "+emailVerificationToken +emailVerificationExpires",
+  );
+
+  if (!user) {
+    return res.json({
+      message:
+        "If an unverified account exists for that email, a verification link has been sent.",
+    });
+  }
+
+  if (user.emailVerified) {
+    return res.json({ message: "Email is already verified. Please log in." });
+  }
+
+  const verificationToken = issueEmailVerification(user);
+  await user.save({ validateBeforeSave: false });
+
+  await sendVerificationEmail({
+    to: user.email,
+    name: user.name,
+    verificationUrl: appUrl(`/verify-email?token=${verificationToken}`),
+  });
+
+  res.json({ message: "Verification email sent. Please check your inbox." });
+};
+
+export const forgotPassword = async (req, res) => {
+  const data = emailSchema.parse(req.body);
+  const user = await User.findOne({ email: data.email.toLowerCase() }).select(
+    "+passwordResetToken +passwordResetExpires",
+  );
+
+  if (user && user.status !== "suspended") {
+    const resetToken = generateToken();
+    user.passwordResetToken = hashToken(resetToken);
+    user.passwordResetExpires = new Date(
+      Date.now() + PASSWORD_RESET_TOKEN_TTL_MS,
+    );
+    await user.save({ validateBeforeSave: false });
+
+    await sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      resetUrl: appUrl(`/reset-password?token=${resetToken}`),
+    });
+
+    await ActivityLog.create({
+      user: user._id,
+      action: "password_reset_requested",
+      ip: req.ip,
+    });
+  }
+
+  res.json({ message: PASSWORD_RESET_RESPONSE });
+};
+
+export const resetPassword = async (req, res) => {
+  const data = resetPasswordSchema.parse(req.body);
+  const user = await User.findOne({
+    passwordResetToken: hashToken(data.token),
+    passwordResetExpires: { $gt: new Date() },
+  }).select("+password +passwordResetToken +passwordResetExpires");
+
+  if (!user) {
+    return res.status(400).json({
+      message: "Invalid or expired password reset token",
+    });
+  }
+
+  user.password = data.password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  await ActivityLog.create({
+    user: user._id,
+    action: "password_reset",
+    ip: req.ip,
+  });
+
+  res.json({ message: "Password reset successfully. You can now log in." });
 };

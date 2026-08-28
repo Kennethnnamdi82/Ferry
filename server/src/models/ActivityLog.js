@@ -7,6 +7,7 @@ const logSchema = new mongoose.Schema(
       type: String,
       enum: [
         'register', 'login', 'logout',
+        'email_verified', 'password_reset_requested', 'password_reset',
         'upload', 'download', 'update', 'delete', 'restore', 'purge',
         'vault_create', 'vault_update', 'vault_delete',
         'invite', 'invite_accept', 'invite_remove',

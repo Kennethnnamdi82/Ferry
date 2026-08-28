@@ -25,6 +25,7 @@ try {
       password: ADMIN_PASSWORD,
       role: 'admin',
       status: 'active',
+      emailVerified: true,
     });
     console.log(`✓ Created admin user: ${ADMIN_EMAIL}`);
   } else {
@@ -35,6 +36,10 @@ try {
     }
     if (user.status !== 'active') {
       user.status = 'active';
+      changed = true;
+    }
+    if (!user.emailVerified) {
+      user.emailVerified = true;
       changed = true;
     }
     if (RESET) {

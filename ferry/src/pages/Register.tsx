@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth, getApiErrorMessage } from "@/context/AuthContext";
+import { authApi } from "@/services/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export default function Register() {
 
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
@@ -65,6 +67,21 @@ export default function Register() {
       toast.error(getApiErrorMessage(err));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function resendVerification() {
+    if (!registeredEmail) return;
+    setResending(true);
+    try {
+      const { data } = await authApi.resendVerification({
+        email: registeredEmail,
+      });
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    } finally {
+      setResending(false);
     }
   }
 
@@ -132,14 +149,11 @@ export default function Register() {
               Didn't receive the email?{" "}
               <button
                 type="button"
+                disabled={resending}
                 className="font-medium text-foreground underline-offset-4 hover:underline"
-                onClick={() => {
-                  toast.info(
-                    "Resend verification will be available here next.",
-                  );
-                }}
+                onClick={resendVerification}
               >
-                Resend verification
+                {resending ? "Sending..." : "Resend verification"}
               </button>
             </p>
 

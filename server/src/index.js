@@ -48,9 +48,19 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many attempts, please try again later." },
 });
+const emailAuthLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests, please try again later." },
+});
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 app.use("/api/auth/refresh", authLimiter);
+app.use("/api/auth/resend-verification", emailAuthLimiter);
+app.use("/api/auth/forgot-password", emailAuthLimiter);
+app.use("/api/auth/reset-password", authLimiter);
 
 function dbStatus() {
   return mongoose.connection.readyState === 1 ? "connected" : "connecting";

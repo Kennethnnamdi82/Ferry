@@ -303,6 +303,15 @@ export const authApi = {
     api.get<{ message: string }>("/auth/verify-email", {
       params: { token },
     }),
+
+  resendVerification: (payload: { email: string }) =>
+    api.post<{ message: string }>("/auth/resend-verification", payload),
+
+  forgotPassword: (payload: { email: string }) =>
+    api.post<{ message: string }>("/auth/forgot-password", payload),
+
+  resetPassword: (payload: { token: string; password: string }) =>
+    api.post<{ message: string }>("/auth/reset-password", payload),
 };
 // ===== Vaults =====
 export const vaultsApi = {

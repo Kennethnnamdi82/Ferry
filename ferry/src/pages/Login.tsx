@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth, getApiErrorMessage } from "@/context/AuthContext";
+import { authApi } from "@/services/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ export default function Login({ adminLogin = false }: { adminLogin?: boolean }) 
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [resending, setResending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,9 +37,29 @@ export default function Login({ adminLogin = false }: { adminLogin?: boolean }) 
         : from || (u.role === "admin" ? "/admin" : "/dashboard");
       nav(destination, { replace: true });
     } catch (err) {
+      const code = (err as { response?: { data?: { code?: string } } })
+        ?.response?.data?.code;
+      if (code === "EMAIL_NOT_VERIFIED") {
+        setUnverifiedEmail(email);
+      }
       toast.error(getApiErrorMessage(err));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function resendVerification() {
+    if (!unverifiedEmail) return;
+    setResending(true);
+    try {
+      const { data } = await authApi.resendVerification({
+        email: unverifiedEmail,
+      });
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    } finally {
+      setResending(false);
     }
   }
 
@@ -60,6 +83,24 @@ export default function Login({ adminLogin = false }: { adminLogin?: boolean }) 
           </p>
 
           <form className="mt-8 space-y-4" onSubmit={onSubmit}>
+            {unverifiedEmail && (
+              <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+                <p className="font-medium">Verify your email to sign in.</p>
+                <p className="mt-1 text-muted-foreground">
+                  We can send a fresh verification link to {unverifiedEmail}.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 h-9"
+                  disabled={resending}
+                  onClick={resendVerification}
+                >
+                  {resending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Resend verification
+                </Button>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-[13px] font-medium">Email</Label>
               <Input
@@ -76,7 +117,7 @@ export default function Login({ adminLogin = false }: { adminLogin?: boolean }) 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-[13px] font-medium">Password</Label>
-                <a href="#" className="text-xs text-muted-foreground hover:text-foreground">Forgot?</a>
+                <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">Forgot?</Link>
               </div>
               <div className="relative">
                 <Input

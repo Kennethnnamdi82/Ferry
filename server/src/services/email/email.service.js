@@ -25,3 +25,31 @@ export const sendVerificationEmail = async ({ to, name, verificationUrl }) => {
     html,
   });
 };
+
+export const sendPasswordResetEmail = async ({ to, name, resetUrl }) => {
+  const html = `
+    <h1>Reset your Ferry password</h1>
+
+    <p>Hi ${name},</p>
+
+    <p>Use the link below to choose a new password for your Ferry account:</p>
+
+    <p>
+      <a href="${resetUrl}">
+        Reset my password
+      </a>
+    </p>
+
+    <p>This link expires soon and can only be used once.</p>
+
+    <p>If you did not request this, you can safely ignore this email.</p>
+
+    <p>- The Ferry Team</p>
+  `;
+
+  return sendEmail({
+    to,
+    subject: "Reset your Ferry password",
+    html,
+  });
+};
