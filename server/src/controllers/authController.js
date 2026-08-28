@@ -3,7 +3,7 @@ import { z } from "zod";
 import User from "../models/User.js";
 import ActivityLog from "../models/ActivityLog.js";
 import Vault from "../models/Vault.js";
-import { generateToken, hashToken } from "../utils/authTokens.js";
+import { generateToken, hashToken } from "../utils/authToken.js";
 import { sendVerificationEmail } from "../services/email/email.service.js";
 
 const registerSchema = z.object({
