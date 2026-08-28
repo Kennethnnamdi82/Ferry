@@ -74,6 +74,14 @@ function issueEmailVerification(user) {
   return token;
 }
 
+async function sendUserVerification(user, token) {
+  await sendVerificationEmail({
+    to: user.email,
+    name: user.name,
+    verificationUrl: appUrl(`/verify-email?token=${token}`),
+  });
+}
+
 export const register = async (req, res) => {
   const data = registerSchema.parse(req.body);
   const email = data.email.toLowerCase();
@@ -81,38 +89,48 @@ export const register = async (req, res) => {
   const exists = await User.findOne({ email });
 
   if (exists) {
-    return res.status(409).json({
-      message: "Email already registered",
+    if (exists.emailVerified) {
+      return res.status(409).json({
+        message: "Email already registered",
+      });
+    }
+
+    const verificationToken = issueEmailVerification(exists);
+    await exists.save({ validateBeforeSave: false });
+    await sendUserVerification(exists, verificationToken);
+
+    return res.status(200).json({
+      message: "Verification email sent. Please check your inbox.",
+      user: publicUser(exists),
     });
   }
 
-  // Create user
-  const user = await User.create({
-    ...data,
-    email,
-    emailVerified: false,
-  });
-  const verificationToken = issueEmailVerification(user);
-  await user.save({ validateBeforeSave: false });
+  let user;
+  try {
+    user = await User.create({
+      ...data,
+      email,
+      emailVerified: false,
+    });
+    const verificationToken = issueEmailVerification(user);
+    await user.save({ validateBeforeSave: false });
 
-  // Create user's default vault
-  await Vault.create({
-    name: "My Documents",
-    description: "Your personal vault",
-    owner: user._id,
-    icon: "folder",
-    color: "blue",
-  });
+    await Vault.create({
+      name: "My Documents",
+      description: "Your personal vault",
+      owner: user._id,
+      icon: "folder",
+      color: "blue",
+    });
 
-  // Build verification URL
-  const verificationUrl = appUrl(`/verify-email?token=${verificationToken}`);
-
-  // Send verification email
-  await sendVerificationEmail({
-    to: user.email,
-    name: user.name,
-    verificationUrl,
-  });
+    await sendUserVerification(user, verificationToken);
+  } catch (err) {
+    if (user?._id) {
+      await Vault.deleteMany({ owner: user._id });
+      await User.deleteOne({ _id: user._id });
+    }
+    throw err;
+  }
 
   // Activity log
   await ActivityLog.create({
@@ -138,7 +156,7 @@ export const login = async (req, res) => {
   if (user.status === "suspended") {
     return res.status(403).json({ message: "Account suspended" });
   }
-  if (!user.emailVerified) {
+  if (user.role !== "admin" && !user.emailVerified) {
     return res.status(403).json({
       message: "Please verify your email before logging in.",
       code: "EMAIL_NOT_VERIFIED",
@@ -238,11 +256,7 @@ export const resendVerification = async (req, res) => {
   const verificationToken = issueEmailVerification(user);
   await user.save({ validateBeforeSave: false });
 
-  await sendVerificationEmail({
-    to: user.email,
-    name: user.name,
-    verificationUrl: appUrl(`/verify-email?token=${verificationToken}`),
-  });
+  await sendUserVerification(user, verificationToken);
 
   res.json({ message: "Verification email sent. Please check your inbox." });
 };
