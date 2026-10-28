@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authApi, getApiErrorMessage } from "@/services/api";
+import { passwordSchema } from "@/lib/password";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -24,8 +25,9 @@ export default function ResetPassword() {
       toast.error("This reset link is invalid.");
       return;
     }
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
+    const parsed = passwordSchema.safeParse(password);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
       return;
     }
     setLoading(true);

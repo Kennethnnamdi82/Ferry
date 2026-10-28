@@ -23,6 +23,10 @@ import adminRoutes from "./routes/admin.js";
 import activityRoutes from "./routes/activity.js";
 
 const app = express();
+// Render terminates TLS at its reverse proxy. Count clients by their forwarded IP.
+const proxyHops = Number(process.env.TRUST_PROXY_HOPS || (process.env.NODE_ENV === "production" ? 1 : 0));
+if (!Number.isInteger(proxyHops) || proxyHops < 0) throw new Error("TRUST_PROXY_HOPS must be a nonnegative integer");
+app.set("trust proxy", proxyHops);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const clientDistPath = [
@@ -35,7 +39,7 @@ app.use(helmet());
 app.use(express.json({ limit: "2mb" }));
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://10.147.94.72:8081",
+    origin: process.env.CLIENT_URL || "http://localhost:8080",
     credentials: true,
   }),
 );
@@ -44,6 +48,7 @@ app.use("/api", rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
+  skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many attempts, please try again later." },
@@ -56,8 +61,12 @@ const emailAuthLimiter = rateLimit({
   message: { message: "Too many requests, please try again later." },
 });
 app.use("/api/auth/login", authLimiter);
-app.use("/api/auth/register", authLimiter);
-app.use("/api/auth/refresh", authLimiter);
+app.use("/api/auth/register", rateLimit({ windowMs: 15 * 60 * 1000, max: 20,
+  standardHeaders: true, legacyHeaders: false,
+  message: { message: "Too many accounts created. Please try again later." } }));
+app.use("/api/auth/refresh", rateLimit({ windowMs: 15 * 60 * 1000, max: 120,
+  standardHeaders: true, legacyHeaders: false,
+  message: { message: "Too many requests. Please try again later." } }));
 app.use("/api/auth/resend-verification", emailAuthLimiter);
 app.use("/api/auth/forgot-password", emailAuthLimiter);
 app.use("/api/auth/reset-password", authLimiter);

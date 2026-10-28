@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 8,
+      validate: {
+        validator: (value) => Buffer.byteLength(value, "utf8") <= 72,
+        message: "Password must be at most 72 bytes",
+      },
       select: false,
     },
 
@@ -42,6 +46,8 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    tokenVersion: { type: Number, default: 0 },
 
     // Email verification
     emailVerified: {

@@ -17,9 +17,6 @@ export function validateStartupEnv() {
     "MONGO_URI",
     "JWT_ACCESS_SECRET",
     "JWT_REFRESH_SECRET",
-    "RESEND_API_KEY",
-    "EMAIL_FROM",
-    "APP_URL",
   ];
   const missing = required.filter((name) => !getEnv(name));
 
@@ -31,6 +28,23 @@ export function validateStartupEnv() {
         "MONGO_URI may also be named MONGODB_URI or DATABASE_URL.",
       ].join(" "),
     );
+  }
+
+  if (process.env.REQUIRE_EMAIL_VERIFICATION && !["true", "false"].includes(process.env.REQUIRE_EMAIL_VERIFICATION)) {
+    throw new Error("REQUIRE_EMAIL_VERIFICATION must be true or false.");
+  }
+  const emailMissing = ["RESEND_API_KEY", "EMAIL_FROM", "APP_URL"].filter((name) => !getEnv(name));
+  if (emailMissing.length && process.env.REQUIRE_EMAIL_VERIFICATION === "true") {
+    throw new Error(`Email verification is required but email configuration is missing: ${emailMissing.join(", ")}`);
+  }
+  if (emailMissing.length) {
+    console.warn("[startup] Email is not configured. Signup and login are available; verification and password reset emails are unavailable.");
+  }
+  if (process.env.APP_URL) {
+    const url = new URL(process.env.APP_URL);
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+      throw new Error("APP_URL must be an HTTP(S) frontend URL without credentials, query parameters or a fragment.");
+    }
   }
 
   const cloudinaryMissing = [

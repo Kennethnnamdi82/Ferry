@@ -24,6 +24,7 @@ export default function Login({ adminLogin = false }: { adminLogin?: boolean }) 
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setUnverifiedEmail("");
     setLoading(true);
     try {
       const u = await login(email, password);

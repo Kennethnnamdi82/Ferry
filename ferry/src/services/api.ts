@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const configuredBaseURL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:5000/api" : "/api");
 const trimmedBaseURL = configuredBaseURL.replace(/\/+$/, "");
 const baseURL = trimmedBaseURL.endsWith("/api")
   ? trimmedBaseURL
@@ -33,12 +33,17 @@ export const tokenStore = {
   },
   getUser<T = unknown>(): T | null {
     const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as T) : null;
+    try {
+      return raw ? (JSON.parse(raw) as T) : null;
+    } catch {
+      return null;
+    }
   },
   clear() {
     localStorage.removeItem(ACCESS_KEY);
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
+    window.dispatchEvent(new Event("auth:logout"));
   },
 };
 
@@ -58,7 +63,7 @@ async function refreshAccessToken(): Promise<string | null> {
   try {
     const { data } = await axios.post(`${baseURL}/auth/refresh`, {
       refreshToken: refresh,
-    });
+    }, { timeout: 30000 });
     tokenStore.setTokens(data.accessToken, data.refreshToken || refresh);
     return data.accessToken;
   } catch {
@@ -133,7 +138,8 @@ api.interceptors.response.use(
       await new Promise((r) => setTimeout(r, 400));
       return api(original);
     }
-    if (status === 401 && !original._retry && tokenStore.refresh) {
+    const publicAuth = /\/auth\/(login|register|refresh|forgot-password|reset-password|verify-email|resend-verification)(?:\?|$)/.test(original.url || "");
+    if (status === 401 && !publicAuth && !original._retry && tokenStore.refresh) {
       original._retry = true;
       refreshing = refreshing || refreshAccessToken();
       const newToken = await refreshing;
@@ -285,9 +291,18 @@ export interface AdminLog {
 }
 
 // ===== Auth =====
+export interface RegisterResponse {
+  user: User;
+  message: string;
+  verificationRequired: boolean;
+  verificationEmailSent: boolean;
+  accessToken?: string;
+  refreshToken?: string;
+}
+
 export const authApi = {
   register: (payload: { name: string; email: string; password: string }) =>
-    api.post<{ user: User; message: string }>("/auth/register", payload),
+    api.post<RegisterResponse>("/auth/register", payload),
 
   login: (payload: { email: string; password: string }) =>
     api.post<{ user: User; accessToken: string; refreshToken: string }>(

@@ -53,7 +53,9 @@ export const updateUser = async (req, res) => {
   const update = {};
   if (status && ['active', 'suspended'].includes(status)) update.status = status;
   if (role && ['user', 'admin'].includes(role)) update.role = role;
-  const user = await User.findByIdAndUpdate(req.params.id, update, { new: true });
+  const user = await User.findByIdAndUpdate(req.params.id, {
+    $set: update, $inc: { tokenVersion: 1 },
+  }, { new: true });
   if (!user) return res.status(404).json({ message: 'Not found' });
   await ActivityLog.create({
     user: req.user._id,

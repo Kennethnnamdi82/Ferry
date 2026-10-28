@@ -1,15 +1,21 @@
 import { sendEmail } from "./email.provider.js";
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[char]);
+}
+
 export const sendVerificationEmail = async ({ to, name, verificationUrl }) => {
   const html = `
-    <h1>Welcome to Ferry, ${name}!</h1>
+    <h1>Welcome to Ferry, ${escapeHtml(name)}!</h1>
 
     <p>Thanks for creating your Ferry account.</p>
 
     <p>Please verify your email address by clicking the button below:</p>
 
     <p>
-      <a href="${verificationUrl}">
+      <a href="${escapeHtml(verificationUrl)}">
         Verify my email
       </a>
     </p>
@@ -30,12 +36,12 @@ export const sendPasswordResetEmail = async ({ to, name, resetUrl }) => {
   const html = `
     <h1>Reset your Ferry password</h1>
 
-    <p>Hi ${name},</p>
+    <p>Hi ${escapeHtml(name)},</p>
 
     <p>Use the link below to choose a new password for your Ferry account:</p>
 
     <p>
-      <a href="${resetUrl}">
+      <a href="${escapeHtml(resetUrl)}">
         Reset my password
       </a>
     </p>

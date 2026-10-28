@@ -140,6 +140,9 @@ export const invite = async (req, res) => {
   if (!vault || role !== 'editor') return res.status(403).json({ message: 'Editor access required' });
   const user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: 'No Ferry account with that email' });
+  if (!user.emailVerified || user.status !== 'active') {
+    return res.status(400).json({ message: 'This user must verify their email before they can receive vault invitations.' });
+  }
   if (user._id.toString() === vault.owner.toString()) {
     return res.status(400).json({ message: 'You are already the editor of this vault' });
   }

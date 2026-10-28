@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FerryLogo } from "@/components/FerryLogo";
+import { EmailVerificationNotice } from "@/components/EmailVerificationNotice";
 
 const userNav = [
   { to: "/dashboard", label: "All files", icon: LayoutDashboard },
@@ -143,7 +144,10 @@ export function AppLayout({ children, mode = "user" }: { children: React.ReactNo
           <FerryLogo size={22} />
           <ThemeToggle />
         </header>
-        <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-10 animate-fade-in">{children}</div>
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-10 animate-fade-in">
+          <EmailVerificationNotice />
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth, getApiErrorMessage } from "@/context/AuthContext";
 import { authApi } from "@/services/api";
 import { Input } from "@/components/ui/input";
@@ -17,18 +17,17 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { FerryLogo } from "@/components/FerryLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { passwordSchema } from "@/lib/password";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   email: z.string().trim().email("Enter a valid email").max(255),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128),
+  password: passwordSchema,
 });
 
 export default function Register() {
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     name: "",
@@ -40,6 +39,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const [registrationMessage, setRegistrationMessage] = useState("");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,9 +60,13 @@ export default function Register() {
         parsed.data.password,
       );
 
-      setRegisteredEmail(parsed.data.email);
-
-      toast.success("Account created. Check your email.");
+      toast.success(result.message);
+      if (result.accessToken && result.refreshToken) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        setRegisteredEmail(result.user.email);
+        setRegistrationMessage(result.message);
+      }
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     } finally {
@@ -89,7 +93,7 @@ export default function Register() {
    * Email verification screen
    *
    * This is shown immediately after successful registration.
-   * The user is NOT authenticated yet.
+   * Only shown when the server explicitly requires email verification.
    */
   if (registeredEmail) {
     return (
@@ -110,11 +114,11 @@ export default function Register() {
             </div>
 
             <h1 className="mt-7 font-display text-3xl font-semibold tracking-tight">
-              Check your email
+              Account created
             </h1>
 
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              We've sent a verification link to:
+              {registrationMessage}
             </p>
 
             <p className="mt-2 break-all font-medium text-foreground">
